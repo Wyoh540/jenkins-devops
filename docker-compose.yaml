@@ -28,6 +28,7 @@ services:
       - jenkins
     environment:
       DOCKER_HOST: tcp://docker:2375
+      TZ: Asia/Shanghai
     ports:
       - "8080:8080"
       - "50000:50000"
@@ -35,8 +36,11 @@ services:
       - ./jenkins-data:/var/jenkins_home
 
   registry-ui:
-    image: joxit/docker-registry-ui:main
+    image: joxit/docker-registry-ui:2.5.7
     restart: always
+    depends_on:
+      registry-server:
+        condition: service_healthy
     networks:
       - jenkins
     ports:
@@ -48,8 +52,6 @@ services:
       - SHOW_CONTENT_DIGEST=true
       - NGINX_PROXY_PASS_URL=http://registry-server:5000
       - SHOW_CATALOG_NB_TAGS=true
-      - CATALOG_MIN_BRANCHES=1
-      - CATALOG_MAX_BRANCHES=1
       - TAGLIST_PAGE_SIZE=100
       - REGISTRY_SECURED=false
       - CATALOG_ELEMENTS_LIMIT=1000
@@ -69,6 +71,11 @@ services:
       REGISTRY_STORAGE_DELETE_ENABLED: 'true'
     volumes:
       - ./registry/data:/var/lib/registry
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:5000/v2/ >/dev/null 2>&1 || exit 1" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
     container_name: registry-server
 
 networks:
