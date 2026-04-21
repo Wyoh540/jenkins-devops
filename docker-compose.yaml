@@ -78,6 +78,28 @@ services:
       retries: 10
     container_name: registry-server
 
+  gitlab:
+    image: gitlab/gitlab-ce:17.11.0-ce.0
+    container_name: gitlab-ce
+    restart: always
+    hostname: gitlab
+    shm_size: 256m
+    networks:
+      - jenkins
+    environment:
+      TZ: Asia/Shanghai
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://localhost:8929'
+        gitlab_rails['time_zone'] = 'Asia/Shanghai'
+    ports:
+      - "8929:8929"
+      - "8443:443"
+      - "2222:22"
+    volumes:
+      - ./gitlab/config:/etc/gitlab
+      - ./gitlab/logs:/var/log/gitlab
+      - ./gitlab/data:/var/opt/gitlab
+
 networks:
   jenkins:
     external: true
